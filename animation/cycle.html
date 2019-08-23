@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        .animation_inner_div {
+            width: 10%;
+            height: 10%;
+            margin: 0 0;
+            padding: 5%;
+            border: 7px dashed #000000;
+            border-radius: 50%;
+            animation: rotatePercent 1s infinite;
+        }
+
+        @keyframes rotatePercent {
+            12.5% {
+                transform: rotate(45deg);
+            }
+            25% {
+                transform: rotate(90deg);
+            }
+            37.5% {
+                transform: rotate(135deg);
+            }
+            50% {
+                transform: rotate(180deg);
+            }
+            62.50% {
+                transform: rotate(225deg);
+            }
+            75% {
+                transform: rotate(270deg);
+            }
+            87.5% {
+                transform: rotate(315deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="id" style="width: 600px;height:600px;border: 1px solid #ff0000">
+</div>
+<script>
+    /**
+     * {id: "id", color: "#ff0000", innerPercent: 0.1, linePercent: 0.05,interval: 0.8}
+     * innerPercent： 空心部分大小
+     * linePercent： 线的宽度
+     * interval： 多少s转一圈
+     * color：线条颜色
+     * id:"某一个div里面"
+     * @param params
+     * @constructor
+     */
+    function CycleAnimation(params) {
+        this.deafultConfig = {
+            border: 0.1
+            , padding: 0.2
+            , color: "#000000"
+            , interval: 0.8
+        }
+        //当前对象
+        let _current_this = this;
+        //追加的目标对象
+        this.element = document.getElementById(params.id);
+        //追加的孩子节点
+        this.child;
+        this.params=params;
+
+        this.refresh = function () {
+            let elementById = this.element;
+            let offsetWidth = elementById.offsetWidth;
+            let offsetHeight = elementById.offsetHeight;
+            //获取最小值
+            let min = offsetWidth < offsetHeight ? offsetWidth : offsetHeight;
+
+            //设置border大小
+            let padding;
+            //设置padding 大小
+            let border;
+            //刷新间隔
+            let interval;
+            //如果大于最大值则使用默认值
+            if (params.innerPercent != null && !isNaN(params.innerPercent) && params.linePercent != null && !isNaN(params.linePercent) && (params.linePercent + params.innerPercent) >= 0.5) {
+                padding = min * this.deafultConfig.padding;
+                border = min * this.deafultConfig.border;
+            } else {
+                //设置默认值
+                if (params.innerPercent != null && !isNaN(params.innerPercent) && params.innerPercent < 1) {
+                    padding = min * params.innerPercent;
+                } else {
+                    padding = min * this.deafultConfig.padding;
+                }
+                if (params.linePercent != null && !isNaN(params.linePercent) && params.linePercent < 1) {
+                    border = min * params.linePercent;
+                } else {
+                    border = min * this.deafultConfig.border;
+                }
+            }
+            //获取宽度
+            let animationWidth = (min - border * 2 - padding * 2) * 0.3;
+            let rpx = animationWidth + "px";
+            let currentElement = this.child;
+
+            currentElement.style.width = rpx;
+            currentElement.style.height = rpx;
+            currentElement.style.marginTop = ((elementById.offsetHeight - animationWidth - padding * 2 - border * 2) / 2) + "px";
+            currentElement.style.marginLeft = (((elementById.offsetWidth - animationWidth - padding * 2 - border * 2) / 2)) + "px";
+
+            //设置内padding 和border
+            currentElement.style.border = border + "px dashed " + (params.color ? params.color : this.deafultConfig.color);
+            currentElement.style.padding = padding + "px";
+
+            //设置刷新间隔
+            if (params.interval != null && !isNaN(params.interval) && params.interval > 0) {
+                interval = params.interval;
+            } else {
+                interval = this.deafultConfig.interval;
+            }
+            currentElement.style.animation = " rotatePercent " + interval + "s infinite";
+
+        }
+
+        //发生改变的时候的大小
+        this.observer = new MutationObserver(function (mutations, observer) {
+            //改变div大小的时候刷新动画尺寸
+            _current_this.refresh();
+        });
+
+        this.init = function () {
+            //添加到该节点下面
+            let htmlElement = document.createElement("div");
+            //添加class
+            htmlElement.classList.add("animation_inner_div");
+
+            this.child = htmlElement;
+            this.element.appendChild(htmlElement);
+
+            //刷新页面
+            this.refresh();
+            //添加监听样式改变事件
+            this.observer.observe(this.element, {
+                attributes: true,
+                attributeOldValue: true,
+                attributeFilter: ['style']
+            });
+        }
+        //停止动画
+        this.close = function () {
+            this.observer.disconnect();
+            this.element.removeChild(this.child);
+        }
+        //开始动画
+        //每次创建一个新的
+        this.start = function () {
+            this.init();
+        }
+    }
+
+    let a = new CycleAnimation({id: "id", color: "#ff0000", innerPercent: 0.1, linePercent: 0.05, interval: 0.8});
+    a.start();
+</script>
+</body>
+</html>
